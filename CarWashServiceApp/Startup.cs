@@ -97,7 +97,7 @@ namespace CarWashServiceApp
 
             using (var context = new CarWashServiceContext())
             {
-                //if (context.Customers.Any())    return;
+                if (context.Customers.Any())    return;
 
                 for (int i = 0; i < 50; i++)
                     context.Customers.Add(new Customer
