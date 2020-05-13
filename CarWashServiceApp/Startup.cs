@@ -1,3 +1,5 @@
+using CarWashServiceApp.Data;
+using CarWashServiceApp.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -5,6 +7,8 @@ using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
+using System.Linq;
 
 namespace CarWashServiceApp
 {
@@ -13,6 +17,9 @@ namespace CarWashServiceApp
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            if (Configuration["GenerateTestData"] == "True")
+                GenerateTestData();
         }
 
         public IConfiguration Configuration { get; }
@@ -26,6 +33,7 @@ namespace CarWashServiceApp
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -70,6 +78,53 @@ namespace CarWashServiceApp
                     spa.UseAngularCliServer(npmScript: "start");
                 }
             });
+        }
+
+        private void GenerateTestData()
+        {
+            GenerateCustomers();
+            GenerateServices();
+
+        }
+
+        private void GenerateCustomers()
+        {
+            string[] firstNames = new[] { "John", "James", "Richard", "George", "Donald" };
+            string[] lastNames = new[] { "Black", "Green", "Bing", "Paul", "Brams" };
+
+            Random random1 = new Random(DateTime.Now.Second);
+            Random random2 = new Random(DateTime.Now.Minute);
+
+            using (var context = new CarWashServiceContext())
+            {
+                //if (context.Customers.Any())    return;
+
+                for (int i = 0; i < 50; i++)
+                    context.Customers.Add(new Customer
+                    {
+                        FirstName = firstNames[random1.Next(firstNames.Length)],
+                        LastName = lastNames[random2.Next(lastNames.Length)]
+                    });
+
+                context.SaveChanges();
+            }
+        }
+
+        private void GenerateServices()
+        {            
+            using (var context = new CarWashServiceContext())
+            {
+                if (context.Services.Any())
+                    return;
+
+                context.Services.Add(new Service { Title = "Hand wash", IsAvailable = true, Duration = new TimeSpan(0, 40, 0) });
+                context.Services.Add(new Service { Title = "Wax polish", IsAvailable = true, Duration = new TimeSpan(0, 20, 0) });
+                context.Services.Add(new Service { Title = "Wash and Vac", IsAvailable = true, Duration = new TimeSpan(0, 30, 0) });
+                context.Services.Add(new Service { Title = "Interior cleaning", IsAvailable = true, Duration = new TimeSpan(0, 35, 0) });
+                context.Services.Add(new Service { Title = "Interior and exterior", IsAvailable = true, Duration = new TimeSpan(0, 60, 0) });
+
+                context.SaveChanges();
+            }
         }
     }
 }
